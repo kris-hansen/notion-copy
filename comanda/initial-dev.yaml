@@ -1,0 +1,87 @@
+loops:
+  project-developer:
+    name: project-developer
+    stateful: true
+    max_iterations: 50
+    timeout_seconds: 0
+    checkpoint_interval: 3
+    exit_condition: llm_decides
+    allowed_paths: [.]
+
+    steps:
+      read_specs:
+        input: README.md
+        model: claude-code
+        action: |
+          Iteration {{ loop.iteration }} of {{ loop.total_iterations }}.
+
+          You are developing this project to fully satisfy the specifications in README.md.
+
+          Previous work summary:
+          {{ loop.previous_output }}
+
+          Your responsibilities:
+          1. Read and deeply understand README.md to know what needs to be built
+          2. Examine the existing codebase structure to understand what has already been done
+          3. Implement the next most important missing feature or fix the most critical gap
+          4. Write clean, well-structured, production-quality code
+          5. Ensure new code integrates cleanly with existing code
+          6. After each iteration, summarize what you implemented and what remains
+
+          Rules:
+          - Implement real, working code — not stubs or placeholders
+          - Follow existing conventions in the codebase
+          - If tests exist, ensure they pass after your changes
+          - Only say DONE when ALL specifications in README.md are fully implemented and working
+
+          Say DONE when the project fully satisfies every requirement in README.md.
+        output: STDOUT
+
+  project-critic:
+    name: project-critic
+    depends_on: [project-developer]
+    stateful: true
+    max_iterations: 30
+    timeout_seconds: 0
+    checkpoint_interval: 3
+    exit_condition: llm_decides
+    allowed_paths: [.]
+
+    steps:
+      critique_and_improve:
+        input: README.md
+        model: claude-code
+        action: |
+          Iteration {{ loop.iteration }} of {{ loop.total_iterations }}.
+
+          You are a senior engineer performing a thorough critique and improvement pass on this project.
+          The project was built to satisfy the specifications in README.md.
+
+          Previous critique and improvement work:
+          {{ loop.previous_output }}
+
+          Your responsibilities:
+          1. Review the codebase thoroughly against the README.md specifications
+          2. Identify and fix issues in this priority order:
+             a. Correctness bugs — logic errors, edge cases, off-by-one errors
+             b. Missing or incomplete spec coverage — anything README.md requires that is absent or broken
+             c. Error handling — unhandled errors, missing validation, poor failure modes
+             d. Code quality — unclear logic, poor naming, unnecessary complexity
+             e. Performance — obvious inefficiencies, N+1 queries, unnecessary allocations
+             f. Security — injection risks, unsafe operations, exposed secrets
+             g. Testability and test coverage — missing tests for critical paths
+          3. Make concrete code changes to fix the issues you find
+          4. After each iteration, summarize what you fixed and what still needs attention
+
+          Rules:
+          - Make real fixes, not just comments or suggestions
+          - Do not break existing working functionality
+          - Prefer targeted, minimal changes over large rewrites unless a rewrite is clearly necessary
+          - Only say DONE when you are satisfied the project is correct, complete, and high quality
+
+          Say DONE when the project is fully correct, robust, and meets a high quality bar.
+        output: STDOUT
+
+execute_loops:
+  - project-developer
+  - project-critic
