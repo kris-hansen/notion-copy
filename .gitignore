@@ -29,3 +29,6 @@ go.work.sum
 
 # Build output
 dist/
+
+# Comanda
+.comanda/
