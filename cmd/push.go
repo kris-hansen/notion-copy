@@ -16,22 +16,34 @@ var pushRecursive bool
 var pushDryRun bool
 
 var pushCmd = &cobra.Command{
-	Use:   "push <input-path> <parent-page-id>",
+	Use:   "push <input-path> [parent-page-id]",
 	Short: "Import markdown files to Notion",
 	Long: `Push uploads markdown files from your local filesystem and creates
 corresponding pages in Notion under the specified parent page.
 
+If no parent-page-id is provided, uses NOTION_DEFAULT_PAGE_ID from environment.
+
 Supports both single files and directories.
 
 Example:
-  notion-copy push ./doc.md abc123def456         # Single file
-  notion-copy push ./docs/ abc123def456          # Directory
-  notion-copy push ./docs/ abc123def456 -r       # Recursive
+  notion-copy push ./doc.md                      # Uses default page
+  notion-copy push ./doc.md abc123def456         # Explicit parent
+  notion-copy push ./docs/ -r                    # Recursive, default page
   notion-copy push ./docs/ abc123def456 --dry-run`,
-	Args: cobra.ExactArgs(2),
+	Args: cobra.RangeArgs(1, 2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		inputPath := args[0]
-		parentPageID := args[1]
+		
+		// Get parent page ID from args or environment
+		var parentPageID string
+		if len(args) >= 2 {
+			parentPageID = args[1]
+		} else {
+			parentPageID = os.Getenv("NOTION_DEFAULT_PAGE_ID")
+			if parentPageID == "" {
+				return fmt.Errorf("no parent page specified and NOTION_DEFAULT_PAGE_ID not set")
+			}
+		}
 
 		// Check if input exists
 		info, err := os.Stat(inputPath)
