@@ -33,7 +33,7 @@ Example:
 	Args: cobra.RangeArgs(1, 2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		inputPath := args[0]
-		
+
 		// Get parent page ID from args or environment
 		var parentPageID string
 		if len(args) >= 2 {
