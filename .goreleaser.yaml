@@ -60,7 +60,7 @@ brews:
     repository:
       owner: kris-hansen
       name: homebrew-tap
-      token: "{{ .Env.TAP_GITHUB_TOKEN }}"
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
     commit_author:
       name: Kris Hansen
       email: kris@4utopia.com
